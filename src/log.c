@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 
 #include <assert.h>
+#include <dirent.h>
 #include <err.h>
 #include <errno.h>
 #include <limits.h>
@@ -228,6 +229,77 @@ log_close(AppContext * const context)
     return 0;
 }
 
+struct filedata {
+    char fn[PATH_MAX];
+    unsigned long long time;
+    unsigned seq;
+};
+
+static int
+islogfile(const char *fn, AppContext *const context, struct filedata *oldest)
+{
+    char *ext;
+    unsigned long long t;
+    unsigned seq;
+
+    if ((ext = strstr(fn, ".msgpack")) == NULL)
+        return 0;
+    if (strcmp(ext + 8, context->logfile_ops->logfile_extension()) != 0)
+        return 0;
+
+    if (sscanf(fn, "%llu.msgpack", &t) != 1 &&
+        sscanf(fn, "%llu.%05u.msgpack", &t, &seq) != 2)
+        return 0;
+
+    if (!*oldest->fn || oldest->time > t || (oldest->time == t && oldest->seq > seq)) {
+        strncpy(oldest->fn, fn, sizeof oldest->fn);
+        oldest->fn[sizeof oldest->fn - 1] = '\0';
+        oldest->time = t;
+        oldest->seq = seq;
+    }
+
+    return 1;
+}
+
+static int
+log_purge(AppContext * const context)
+{
+    struct filedata oldest;
+    struct dirent *ent;
+    struct stat st;
+    unsigned files;
+    size_t space;
+    DIR *d;
+
+    if (context->logfile_max_files == 0 && context->logfile_max_space == 0)
+        return 0;
+
+    if ((d = opendir(".")) == NULL)
+        return 0;
+
+    *oldest.fn = '\0';
+    oldest.time = 0;
+    oldest.seq = 0;
+    files = 0;
+    space = 0;
+    while ((ent = readdir(d)) != NULL) {
+        if (!islogfile(ent->d_name, context, &oldest))
+            continue;
+        files++;
+        if (context->logfile_max_space && stat(ent->d_name, &st) == 0)
+            space += st.st_size;
+    }
+
+    if ((context->logfile_max_files && files > context->logfile_max_files) ||
+        (context->logfile_max_space && space > context->logfile_max_space)) {
+        if (unlink(oldest.fn) == 0)
+            return log_purge(context);
+        warn(_("Unable to purge %s"), oldest.fn);
+    }
+
+    return 0;
+}
+
 int
 log_rotate(AppContext * const context)
 {
@@ -270,7 +342,7 @@ log_rotate(AppContext * const context)
     }
     assert(context->logfile_enabled = 1);
 
-    return 0;
+    return log_purge(context);
 }
 
 time_t
@@ -304,7 +376,7 @@ log_rotate_if_needed(AppContext * const context)
         (off_t) context->logfile_soft_limit) {
         return log_rotate(context);
     }
-    return 0;
+    return log_purge(context);
 }
 
 int

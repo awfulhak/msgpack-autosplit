@@ -12,15 +12,17 @@
 
 static struct option getopt_long_options[] = {
     { "dir", 1, NULL, 'd' },
+    { "max-files", 1, NULL, 'F' },
     { "help", 0, NULL, 'h' },
+    { "max-space", 1, NULL, 'S' },
     { "soft-limit", 1, NULL, 's' },
     { "rotate-after", 1, NULL, 't' },
-    { "compress", 1, NULL, 'z' },
     { "version", 0, NULL, 'V' },
+    { "compress", 1, NULL, 'z' },
     { NULL, 0, NULL, 0 }
 };
 
-static const char *getopt_options = "d:hs:z:V";
+static const char *getopt_options = "d:F:hS:s:t:Vz:";
 
 static void
 options_version(void)
@@ -50,6 +52,8 @@ options_init_with_default(AppContext * const context)
     context->logfile_soft_limit = (size_t) LOGFILE_SOFT_LIMIT_DEFAULT;
     context->logfile_rotate_after = (time_t) -1;
     context->logfile_seq = 0U;
+    context->logfile_max_files = 0U;
+    context->logfile_max_space = 0U;
 
     return 0;
 }
@@ -81,23 +85,29 @@ options_parse(AppContext * const context, int argc, char *argv[])
         case 'd':
             context->log_dir = optarg;
             break;
+        case 'F':
+            context->logfile_max_files = (size_t) strtoul(optarg, NULL, 10);
+            break;
         case 'h':
             options_usage();
             exit(0);
-        case 't':
-            context->logfile_rotate_after = (time_t) strtoul(optarg, NULL, 10);
+        case 'S':
+            context->logfile_max_space = (size_t) strtoul(optarg, NULL, 10);
             break;
         case 's':
             context->logfile_soft_limit = (size_t) strtoul(optarg, NULL, 10);
             break;
+        case 't':
+            context->logfile_rotate_after = (time_t) strtoul(optarg, NULL, 10);
+            break;
+        case 'V':
+            options_version();
+            exit(0);
         case 'z':
             if (log_set_compression(context, optarg) != 0) {
                 errx(1, _("Unsupported compression method: [%s]"), optarg);
             }
             break;
-        case 'V':
-            options_version();
-            exit(0);
         default:
             options_usage();
             exit(0);

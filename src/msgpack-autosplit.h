@@ -27,6 +27,8 @@ typedef struct AppContext_ {
     size_t              logfile_soft_limit;
     time_t              logfile_last_rotation;
     time_t              logfile_rotate_after;
+    unsigned int        logfile_max_files;
+    size_t              logfile_max_space;
     unsigned int        logfile_seq;
     LogCompression      log_compression;
     _Bool               logfile_enabled;
