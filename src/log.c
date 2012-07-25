@@ -252,8 +252,10 @@ islogfile(const char *fn, AppContext *const context, struct filedata *oldest)
         return 0;
 
     if (!*oldest->fn || oldest->time > t || (oldest->time == t && oldest->seq > seq)) {
-        strncpy(oldest->fn, fn, sizeof oldest->fn);
         oldest->fn[sizeof oldest->fn - 1] = '\0';
+        strncpy(oldest->fn, fn, sizeof oldest->fn);
+        if (oldest->fn[sizeof oldest->fn - 1])
+	    errx(1, _("%s: File name too long - max %zu"), fn, sizeof oldest->fn);
         oldest->time = t;
         oldest->seq = seq;
     }
