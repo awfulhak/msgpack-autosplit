@@ -53,7 +53,7 @@ options_init_with_default(AppContext * const context)
     context->logfile_rotate_after = (time_t) -1;
     context->logfile_seq = 0U;
     context->logfile_max_files = 0U;
-    context->logfile_max_space = 0U;
+    context->logfile_max_space = 0;
 
     return 0;
 }
@@ -92,7 +92,7 @@ options_parse(AppContext * const context, int argc, char *argv[])
             options_usage();
             exit(0);
         case 'S':
-            context->logfile_max_space = (size_t) strtoul(optarg, NULL, 10);
+            context->logfile_max_space = (off_t) strtoul(optarg, NULL, 10);
             break;
         case 's':
             context->logfile_soft_limit = (size_t) strtoul(optarg, NULL, 10);

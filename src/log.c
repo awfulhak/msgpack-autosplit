@@ -268,7 +268,7 @@ log_purge(AppContext * const context)
     struct dirent *ent;
     struct stat st;
     unsigned files;
-    size_t space;
+    off_t space;
     DIR *d;
 
     if (context->logfile_max_files == 0 && context->logfile_max_space == 0)
