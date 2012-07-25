@@ -292,8 +292,15 @@ log_purge(AppContext * const context)
 
     if ((context->logfile_max_files && files > context->logfile_max_files) ||
         (context->logfile_max_space && space > context->logfile_max_space)) {
-        if (unlink(oldest.fn) == 0)
-            return log_purge(context);
+        if (stat(oldest.fn, &st) == 0 && unlink(oldest.fn) == 0) {
+            if (context->logfile_max_space)
+                space -= st.st_size;
+            files--;
+            if ((context->logfile_max_files && files > context->logfile_max_files) ||
+                (context->logfile_max_space && space > context->logfile_max_space))
+                return log_purge(context);
+            return 0;
+        }
         warn(_("Unable to purge %s"), oldest.fn);
     }
 
