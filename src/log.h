@@ -27,6 +27,7 @@ int log_init(AppContext * const context);
 int log_set_compression(AppContext * const context, const char * const name);
 int log_close(AppContext * const context);
 int log_rotate(AppContext * const context);
+int log_purge_if_needed(AppContext * const context);
 int log_rotate_if_needed(AppContext * const context);
 time_t log_get_delay_before_next(AppContext * const context);
 ssize_t log_write(AppContext * const context, const void * const data,

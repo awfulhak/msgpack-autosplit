@@ -101,6 +101,7 @@ app_process_stream(AppContext * const context)
     size_t           offset;
     size_t           poffset = (size_t) 0U;
 
+    log_purge_if_needed(context);
     msgpack_sbuffer_init(&sbuf);
     msgpack_unpacked_init(&pac);
     for (;;) {
@@ -138,6 +139,7 @@ app_process_stream(AppContext * const context)
             }
             poffset += offset;
         }
+        log_purge_if_needed(context);
         if (poffset >= sbuf.size) {
             msgpack_sbuffer_clear(&sbuf);
         } else {

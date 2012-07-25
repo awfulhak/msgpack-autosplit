@@ -10,10 +10,10 @@
 \fBmsgpack\-autosplit\fR \fB\-\-dir=<directory>\fR [\fIoptions\fR]
 .
 .SH "DESCRIPTION"
-Since records in a MessagePack stream are not delimited by carriage returns, tools like Logrotate can hardly safely rotate this kind of log file without breaking arbitrary records\.
+Since records in a msgpack stream are not delimited by linefeeds, tools such as logrotate(8) can not safely rotate the output without breaking arbitrary records\.
 .
 .P
-msgpack\-autosplit reads a MessagePack stream on the standard input, writes this stream to disk, and automatically, and safely perform logfile rotation after a file reaches a maximum size, or after a maximum delay\.
+msgpack\-autosplit reads a MessagePack stream from standard input, writes this stream to disk, and safely rotates the disk file when it reaches a maximum size or after a maximum delay\.
 .
 .P
 You\'d rather use Fluent\. Fluent is awesome\. But, well, sometimes, Fluent not an option\.
@@ -21,13 +21,19 @@ You\'d rather use Fluent\. Fluent is awesome\. But, well, sometimes, Fluent not 
 .SH "OPTIONS"
 .
 .IP "\(bu" 4
-\fB\-d\fR, \fB\-\-dir=<directory>\fR: set the target directory, where logs are going to be written\.
+\fB\-d\fR, \fB\-\-dir=<directory>\fR: set the target directory.  All log files are written to this directory.  As msgpack\-autosplit makes this directory the current directory, it should not be removed without restarting msgpack\-autosplit\.
+.
+.IP "\(bu" 4
+\fB\-F\fR, \fB\-\-max\-files=<N>\fR: create at most N files.  Older files are purged from disk if more than this number of log files exist.
 .
 .IP "\(bu" 4
 \fB\-h\fR, \fB\-\-help\fR: show usage\.
 .
 .IP "\(bu" 4
-\fB\-s\fR, \fB\-\-soft\-limit=<bytes>\fR: set the limit after which a log rotation will occur\.
+\fB\-S\fR, \fB\-\-max\-space=<N>\fR: use at most N bytes of disk space.  Older files are purged from disk if they exceed this limit.
+.
+.IP "\(bu" 4
+\fB\-s\fR, \fB\-\-soft\-limit=<bytes>\fR: set the file size limit after which a log rotation will occur\.
 .
 .IP "\(bu" 4
 \fB\-t\fR, \fB\-\-rotate\-after=<seconds>\fR: trigger a rotation after this many seconds\.
@@ -52,7 +58,7 @@ $ msgpack\-autosplit \-d /var/log/queries
 .
 .nf
 
-$ msgpack\-autosplit \-d /var/log/queries \-s 1000000 \-t 86400 \-z gzip
+$ msgpack\-autosplit \-d /var/log/queries \-s 1000000 \-t 86400 \-z gzip -S 20000000
 .
 .fi
 
